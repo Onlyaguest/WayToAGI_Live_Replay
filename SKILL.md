@@ -273,3 +273,58 @@ done
 | `LIVE_REPLAY_DRY_RUN` | `0` | 设为 `1` 只预览不写入 |
 
 用户完全控制：不配置就是手动模式，配了环境变量就自动跑。
+
+---
+
+## 直播归档表（核心输出）
+
+每场直播结束后，自动写入一条归档记录到飞书 Base：
+
+```bash
+lark-cli base +table-create \
+  --base-token <base_token> \
+  --name "直播归档" \
+  --fields '[
+    {"type":"datetime","name":"直播日期"},
+    {"type":"text","name":"直播主题"},
+    {"type":"text","name":"板块","options":[
+      {"name":"未来硅世界"},{"name":"共学直播"},{"name":"OpenClaw训练营"},{"name":"读书会"},{"name":"其他"}
+    ]},
+    {"type":"text","name":"主要嘉宾"},
+    {"type":"text","name":"主要内容"},
+    {"type":"text","name":"回放链接"},
+    {"type":"text","name":"文字稿链接"},
+    {"type":"text","name":"精华文档链接"},
+    {"type":"text","name":"妙记链接"},
+    {"type":"text","name":"时长"}
+  ]'
+
+# 写入归档记录
+lark-cli base +record-upsert \
+  --base-token <base_token> \
+  --table-id <table_id> \
+  --json '{
+    "直播日期": "2026-03-28 00:00:00",
+    "直播主题": "对谈Happycapy创始人，从创意到推广的心路历程",
+    "板块": "未来硅世界",
+    "主要嘉宾": "Jarod（Happycapy创始人）",
+    "主要内容": "Agent范式变化、14天AI开发上线、定价策略、PH月榜第一实战、组织变革",
+    "回放链接": "https://waytoagi.feishu.cn/minutes/obcno6anw1st7lpu2nr4f816",
+    "文字稿链接": "https://waytoagi.feishu.cn/docx/ZcwjdEdkQoYwEhxrhfgc6mZ6ndc",
+    "精华文档链接": "https://www.feishu.cn/docx/xxx",
+    "妙记链接": "https://waytoagi.feishu.cn/minutes/obcno6anw1st7lpu2nr4f816",
+    "时长": "2小时22分钟"
+  }'
+```
+
+### 归档 vs 金句 vs 知识卡片
+
+| 表 | 粒度 | 内容 | 用途 |
+|---|---|---|---|
+| 直播归档 | 每场直播一行 | 主题/嘉宾/链接/板块 | 直播资产管理，查历史 |
+| 直播金句 | 每条金句一行 | 金句/说话人/适合平台 | 社交媒体素材 |
+| 知识卡片 | 每个知识点一行 | 知识点/难度/主题 | 串联 Study Reviver 学习路径 |
+
+### 总结图（TODO）
+
+> 直播精华总结生成一张信息图（留白，后续接入图片生成能力）
