@@ -230,3 +230,46 @@ lark-cli 命令组合：
 | 串联 | 知识卡片 Base 是共享的 | 直播知识点自动写入 Study Reviver Base |
 
 两个 Skill 组合 = 社区知识的完整生命周期：**直播产出 → 即时传播 → 长期沉淀 → 学习复用**。
+
+---
+
+## 触发模式：手动 vs 自动
+
+### 手动模式（默认）
+
+直播结束后，跟 Agent 说一句：
+
+```plaintext
+这是今晚直播的妙记链接：{链接}。帮我复盘。
+```
+
+### 自动模式（需配置）
+
+直播结束后自动触发复盘，无需人工干预。
+
+**配置方式：**
+
+```bash
+# 方式 A：cron 定时检查（简单）
+# 每天 22:30 检查当天是否有已结束的会议，有则自动复盘
+# 在 crontab 中添加：
+30 22 * * * /path/to/gen-live-replay.sh >> /path/to/cron-live-replay.log 2>&1
+
+# 方式 B：事件监听（实时）
+# 监听飞书会议结束事件，结束即触发
+lark-cli event +subscribe --events "vc.meeting.meeting_ended_v1" --format ndjson | while read event; do
+  # 解析 meeting_id，拉取妙记，跑复盘流程
+  ./gen-live-replay.sh --meeting-id $(echo $event | jq -r '.meeting_id')
+done
+```
+
+**开关控制：**
+
+| 环境变量 | 默认值 | 说明 |
+|---------|--------|------|
+| `LIVE_REPLAY_AUTO` | `0` | 设为 `1` 开启自动模式 |
+| `LIVE_REPLAY_CHAT_ID` | 空 | 自动推送的目标群 ID |
+| `LIVE_REPLAY_BASE_TOKEN` | 空 | 金句/知识卡片写入的 Base |
+| `LIVE_REPLAY_DRY_RUN` | `0` | 设为 `1` 只预览不写入 |
+
+用户完全控制：不配置就是手动模式，配了环境变量就自动跑。
